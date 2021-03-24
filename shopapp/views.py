@@ -5,6 +5,7 @@ from .models import Product,Customer,Cart,OrderPlace
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 # def home(request):
 #  return render(request, 'app/home.html')
 class ProductView(View):
@@ -75,7 +76,6 @@ def minus_cart(request):
         cart=Cart.objects.get(Q(product=prod_id) & Q(user=request.user))
         cart.quantity-=1
         cart.save()
-
         amount=0.0
         shipping_amount = 50.0
         total_amount=0.0
@@ -96,7 +96,9 @@ def minus_cart(request):
 def remove_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prd_id']
+        # cart=get_object_or_404(Cart, Q(product=prod_id) & Q(user=request.user))
         cart=Cart.objects.get(Q(product=prod_id) & Q(user=request.user))
+        # cart=Cart.objects.filter(Q(product=prod_id) & Q(user=request.user))
         cart.delete()
         amount=0.0
         shipping_amount = 50.0
@@ -106,15 +108,14 @@ def remove_cart(request):
             for p in cart_product:
                 tamount=(p.quantity*p.product.discount_price)
                 amount+=tamount
-
+                
             data={
                 'amount':amount,
                 'totalamount':amount + shipping_amount
             }
             return JsonResponse(data)
-           
-     
-
+        else:
+            return render(request,'app/emptycart.html')
 
 
 def buy_now(request):
@@ -148,7 +149,8 @@ def address(request):
     return render(request, 'app/address.html',{'customer':customer,'active':'btn-primary'})
 
 def orders(request):
- return render(request, 'app/orders.html')
+    op=OrderPlace.objects.filter(user=request.user)
+    return render(request, 'app/orders.html',{'op':op})
 
 # def change_password(request):
 #  return render(request, 'app/changepassword.html')
@@ -180,5 +182,31 @@ class CustomerRegistrationView(View):
             form.save()
             messages.success(request,'Congratulation !! Regisration successlully')
         return render(request, 'app/customerregistration.html',{'form':form})
+
 def checkout(request):
- return render(request, 'app/checkout.html')
+    user=request.user
+    add=Customer.objects.filter(user=user)
+    cart_item=Cart.objects.filter(user=user)
+    amount=0.0
+    shipping_amount = 50.0
+    total_amount=0.0
+    cart_product=[p for p in Cart.objects.all() if p.user == user]
+    if cart_product:
+        for p in cart_product:
+            tamount=(p.quantity*p.product.discount_price)
+            amount+=tamount
+            total_amount=amount+shipping_amount
+        totalamount= amount + shipping_amount
+    return render(request, 'app/checkout.html',{'add':add,'cart_item':cart_item,'totalamount':totalamount})
+
+
+def payment_done(request):
+    user=request.user
+    cust_id=request.GET.get('custid')
+    customer=Customer.objects.get(id=cust_id)
+    cart=Cart.objects.filter(user=user)
+    for c in cart:
+        OrderPlace(user=user,customer=customer,product=c.product,quantity=c.quantity).save()
+        c.delete()
+    return redirect("orders")
+
