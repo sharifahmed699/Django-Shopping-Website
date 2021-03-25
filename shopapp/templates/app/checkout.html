@@ -22,7 +22,7 @@
   <div class="col-sm-4 offset-sm-1">
     <h4>Select Shipping Address</h4>
     <hr>
-    <form action="/paymentdone">
+    <form action="/paymentdone" id="myform">
       {% for ad in add %}
       <div class="card">
         <div class="card-body">
@@ -37,7 +37,8 @@
         </div>
          {% endfor %}
         <div class="text-end">
-          <button type="submit" class="btn btn-warning mt-3 px-5 fw-bold">Continue</button>
+          {% comment %} <button type="submit" class="btn btn-warning mt-3 px-5 fw-bold">Continue</button> {% endcomment %}
+          <div id="paypal-button-container"></div>
         </div>
        
       </form>
@@ -45,3 +46,35 @@
   </div>
 </div>
 {% endblock main-content %}
+
+{% block payment_gateway %}
+<script src="https://www.paypal.com/sdk/js?client-id=Aao4lGRx-aud0IOdH_C2aA4REC5Ao0tBc1lqrr-GWN6hKo1lkLMoVF-wUO1mhxEqVKibgJjOmpMSpBq1&currency=USD"></script>
+
+    <script>
+        // Render the PayPal button into #paypal-button-container
+        paypal.Buttons({
+
+            // Set up the transaction
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: '{{totalamount}}'
+                        }
+                    }]
+                });
+            },
+
+            // Finalize the transaction
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    // Show a success message to the buyer
+                    alert('Transaction completed by ' + details.payer.name.given_name + '!');
+                    document.getElementById("myform").submit();
+                });
+            }
+
+
+        }).render('#paypal-button-container');
+    </script>
+{% endblock payment_gateway %}
