@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 from .models import Customer,Cart,OrderPlace,Product
 # Register your models here.
 
@@ -17,7 +19,18 @@ class CartModelAdmin(admin.ModelAdmin):
 
 admin.site.register(Cart,CartModelAdmin)
 
+
+@admin.register(OrderPlace)
 class OrderPlaceModelAdmin(admin.ModelAdmin):
     list_display=['id','user','customer','product','quantity','order_date','status']
 
-admin.site.register(OrderPlace,OrderPlaceModelAdmin)
+
+# def product_info(self,obj):
+#     link=reverse("admin:shopapp_customer_change",args=[obj.product.pk])
+#     return format_html('<a href="{}">{}</a>',link,obj.customer.title)
+
+
+# def customer_info(self,obj):
+#     link=reverse("admin:app_customer_change",args=[obj.customer.pk])
+#     return format_html('<a href="{}">{}</a>',link,obj.customer.name)
+
