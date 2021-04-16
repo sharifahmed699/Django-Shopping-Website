@@ -25,7 +25,7 @@ SECRET_KEY = '!e22pb6nj-*5(as@5!vii$vlc-t#2#-u^^gm+5lp5(eng3v8x8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['shoppingly699.herokuapp.com','127.0.0.1']
 
 
 # Application definition
